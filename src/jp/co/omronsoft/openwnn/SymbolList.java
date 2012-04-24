@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009  OMRON SOFTWARE Co., Ltd.
+ * Copyright (C) 2008-2012  OMRON SOFTWARE Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,10 +98,10 @@ public class SymbolList implements WnnEngine {
 
         case LANG_JA:
             /* symbols for Japanese IME */
-            mSymbols.put(SYMBOL_ENGLISH, getXmlfile(R.xml.symbols_latin1_list));
             mSymbols.put(SYMBOL_JAPANESE, getXmlfile(R.xml.symbols_japan_list));
             mSymbols.put(SYMBOL_JAPANESE_FACE, getXmlfile(R.xml.symbols_japan_face_list));
-            mCurrentList = mSymbols.get(SYMBOL_ENGLISH);
+            mSymbols.put(SYMBOL_ENGLISH, getXmlfile(R.xml.symbols_latin1_list));
+            mCurrentList = mSymbols.get(SYMBOL_JAPANESE);
             break;
 
         case LANG_ZHCN: 

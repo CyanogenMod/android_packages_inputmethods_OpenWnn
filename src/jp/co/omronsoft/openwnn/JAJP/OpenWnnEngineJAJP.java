@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009  OMRON SOFTWARE Co., Ltd.
+ * Copyright (C) 2008-2012  OMRON SOFTWARE Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ import android.util.Log;
 /**
  * The OpenWnn engine class for Japanese IME.
  * 
- * @author Copyright (C) 2009 OMRON SOFTWARE CO., LTD.  All Rights Reserved.
+ * @author Copyright (C) 2009-2011 OMRON SOFTWARE CO., LTD.  All Rights Reserved.
  */
 public class OpenWnnEngineJAJP implements WnnEngine {
     /** Current dictionary type */
@@ -78,7 +78,10 @@ public class OpenWnnEngineJAJP implements WnnEngine {
     public static final int MAX_OUTPUT_LENGTH = 50;
     /** Limitation of predicted candidates */
     public static final int PREDICT_LIMIT = 100;
-   
+
+    /** Limitation of candidates one-line */
+    public static final int LIMIT_OF_CANDIDATES_1LINE = 500;
+
     /** OpenWnn dictionary */
     private WnnDictionary mDictionaryJP;
 

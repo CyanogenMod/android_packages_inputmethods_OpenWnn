@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009  OMRON SOFTWARE Co., Ltd.
+ * Copyright (C) 2008-2012  OMRON SOFTWARE Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import android.view.inputmethod.EditorInfo;
 /**
  * The interface of input view manager used by OpenWnn.
  *
- * @author Copyright (C) 2009 OMRON SOFTWARE CO., LTD.  All Rights Reserved.
+ * @author Copyright (C) 2009-2011 OMRON SOFTWARE CO., LTD.  All Rights Reserved.
  */
 public interface InputViewManager {
     /**
@@ -63,4 +63,15 @@ public interface InputViewManager {
      * Close the input view.
      */
     public void closing();
+ 
+    /**
+     * Show the input view.
+     */
+    public void showInputView();
+
+    /**
+     * Hide the input view.
+     */
+    public void hideInputView();
+
 }

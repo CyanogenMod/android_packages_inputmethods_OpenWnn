@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009  OMRON SOFTWARE Co., Ltd.
+ * Copyright (C) 2008-2012  OMRON SOFTWARE Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -137,6 +137,8 @@ public class OpenWnnDictionaryImpl implements WnnDictionary {
     protected SQLiteDatabase mDbDic = null;
     /** The search cursor of the writable dictionary */
     protected SQLiteCursor mDbCursor = null;
+    /** The writable dictionary object Access helper */
+    protected OpenWnnSQLiteOpenHelper mDbOpenHelper = null;
     /** The number of queried items */
     protected int mCountCursor = 0;
     /** The type of the search cursor object */
@@ -322,6 +324,7 @@ public class OpenWnnDictionaryImpl implements WnnDictionary {
             /* The SQLiteDataBase object must close() before releasing. */
             mDbDic.close();
             mDbDic = null;
+            mDbOpenHelper = null;
         }
     }
     /**
@@ -351,7 +354,8 @@ public class OpenWnnDictionaryImpl implements WnnDictionary {
     public void setInUseState( boolean flag ) {
         if( flag ) {
             if( mDbDic == null ) {
-                mDbDic = SQLiteDatabase.openOrCreateDatabase( mDicFilePath, null );
+                mDbOpenHelper = new OpenWnnSQLiteOpenHelper(OpenWnn.getCurrentIme(), mDicFilePath);
+                mDbDic = mDbOpenHelper.getWritableDatabase();
             }
         } else {
             freeDatabase();

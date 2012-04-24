@@ -1,9 +1,9 @@
 -------------------------------------------------------------------------------
                               OpenWnn Japnese README
 
-                                   Version 1.3.5
-                  
-     (C) Copyright OMRON SOFTWARE Co., Ltd. 2008,2009 All Rights Reserved.
+                                Version 1.3.6
+ 
+     (C) Copyright OMRON SOFTWARE Co., Ltd. 2008-2012 All Rights Reserved.
 -------------------------------------------------------------------------------
 
 1. About OpenWnn
@@ -83,7 +83,17 @@
             *.png                             |
         drawable-ja/                          |
             *.png                             |
+        drawable-xlarge/                      |
+            *.xml                             |
+            *.png                             |
+        drawable-xlarge-hdpi/                 |
+            *.xml                             |
+            *.png                             |
+        drawable-xlarge-land-hdpi/            |
+            *.png                             |
         layout/                               |
+            *.xml                             |
+        layout-xlarge/                        |
             *.xml                             |
         raw/                                  |
             type.ogg                          |
@@ -91,9 +101,19 @@
             *.xml                             |
         values-ja/                            |
             *.xml                             |
+        values-land/                          |
+            *.xml                             |
+        values-xlarge/                        |
+            *.xml                             |
+        values-xlarge-land/                   |
+            *.xml                             |
         values-zh-rCN                         |
             *.xml                             |
         xml/                                  |
+            *.xml                             |
+        xml-land/                             |
+            *.xml                             |
+        xml-xlarge/                           |
             *.xml                             |
 
     src/                                      IME source code (Java)

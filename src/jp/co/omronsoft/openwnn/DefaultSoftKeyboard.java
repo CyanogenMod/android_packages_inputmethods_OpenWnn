@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009  OMRON SOFTWARE Co., Ltd.
+ * Copyright (C) 2008-2012  OMRON SOFTWARE Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package jp.co.omronsoft.openwnn;
 
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
 import android.widget.TextView;
-import android.inputmethodservice.Keyboard;
-import android.inputmethodservice.KeyboardView;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.content.res.*;
@@ -31,10 +31,14 @@ import android.content.Context;
 
 import android.util.Log;
 
+import jp.co.omronsoft.openwnn.Keyboard;
+import jp.co.omronsoft.openwnn.KeyboardView;
+import jp.co.omronsoft.openwnn.KeyboardView.OnKeyboardActionListener;
+
 /**
  * The default software keyboard class.
  *
- * @author Copyright (C) 2009 OMRON SOFTWARE CO., LTD.  All Rights Reserved.
+ * @author Copyright (C) 2009-2011 OMRON SOFTWARE CO., LTD.  All Rights Reserved.
  */
 public class DefaultSoftKeyboard implements InputViewManager, KeyboardView.OnKeyboardActionListener {
     /*
@@ -104,7 +108,16 @@ public class DefaultSoftKeyboard implements InputViewManager, KeyboardView.OnKey
     public static final int KEYCODE_JP12_HAN_ALPHA  = -229;
     /** Japanese 12-key keyboard [MODE TOOGLE CHANGE] */
     public static final int KEYCODE_JP12_TOGGLE_MODE = -230;
-    
+
+    /** Key code for symbol keyboard alt key */
+    public static final int KEYCODE_4KEY_MODE        = -300;
+    /** Key code for symbol keyboard up key */
+    public static final int KEYCODE_4KEY_UP          = -301;
+    /** Key code for symbol keyboard down key */
+    public static final int KEYCODE_4KEY_DOWN        = -302;
+    /** Key code for symbol keyboard del key */
+    public static final int KEYCODE_4KEY_CLEAR       = -303;
+
     /* for Qwerty keyboard */
     /** Qwerty keyboard [DEL] */
     public static final int KEYCODE_QWERTY_BACKSPACE = -100;
@@ -146,7 +159,7 @@ public class DefaultSoftKeyboard implements InputViewManager, KeyboardView.OnKey
     protected KeyboardView mKeyboardView;
     
     /** View objects (main side) */
-    protected ViewGroup mMainView;
+    protected BaseInputView mMainView;
     /** View objects (sub side) */
     protected ViewGroup mSubView;
     
@@ -262,6 +275,15 @@ public class DefaultSoftKeyboard implements InputViewManager, KeyboardView.OnKey
     /** Whether the H/W keyboard is hidden. */
     protected boolean mHardKeyboardHidden = true;
 
+    /** Whether the H/W 12key keyboard. */
+    protected boolean mEnableHardware12Keyboard = false;
+
+    /** Symbol keyboard */
+    protected Keyboard mSymbolKeyboard;
+
+    /** Symbol keyboard state */
+    protected boolean mIsSymbolKeyboard = false;
+
     /**
      * Status of the composing text
      * <br>
@@ -277,6 +299,60 @@ public class DefaultSoftKeyboard implements InputViewManager, KeyboardView.OnKey
     
     /** Key toggle cycle table currently using */
     protected String[] mCurrentCycleTable;
+
+    /** Event listener for symbol keyboard */
+    private OnKeyboardActionListener mSymbolOnKeyboardAction = new OnKeyboardActionListener() {
+        public void onKey(int primaryCode, int[] keyCodes) {
+            switch (primaryCode) {
+            case KEYCODE_4KEY_MODE:
+                mWnn.onEvent(new OpenWnnEvent(OpenWnnEvent.INPUT_KEY,
+                                              new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK)));
+                break;
+
+            case KEYCODE_4KEY_UP:
+                mWnn.onEvent(new OpenWnnEvent(OpenWnnEvent.CANDIDATE_VIEW_SCROLL_UP));
+                break;
+
+            case KEYCODE_4KEY_DOWN:
+                mWnn.onEvent(new OpenWnnEvent(OpenWnnEvent.CANDIDATE_VIEW_SCROLL_DOWN));
+                break;
+
+            case KEYCODE_4KEY_CLEAR:
+                InputConnection connection = mWnn.getCurrentInputConnection();
+                if (connection != null) {
+                    connection.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
+                }
+                return;
+
+            default:
+                break;
+            }
+        }
+        public void onPress(int primaryCode) {
+            playSoundAndVibration();
+        }
+        public void onText(CharSequence text) { }
+        public void swipeLeft() { }
+        public void swipeRight() { }
+        public void swipeUp() { }
+        public void swipeDown() { }
+        public void onRelease(int primaryCode) { }
+        public boolean onLongPress(Keyboard.Key key) {
+            switch (key.codes[0]) {
+            case KEYCODE_4KEY_UP:
+                mWnn.onEvent(new OpenWnnEvent(OpenWnnEvent.CANDIDATE_VIEW_SCROLL_FULL_UP));
+                return true;
+
+            case KEYCODE_4KEY_DOWN:
+                mWnn.onEvent(new OpenWnnEvent(OpenWnnEvent.CANDIDATE_VIEW_SCROLL_FULL_DOWN));
+                return true;
+
+            default:
+                break;
+            }
+            return false;
+        }
+    };
 
     /**
      * Constructor
@@ -527,6 +603,9 @@ public class DefaultSoftKeyboard implements InputViewManager, KeyboardView.OnKey
          */
         createKeyboards(parent);
 
+        /* create symbol keyboard */
+        mSymbolKeyboard = new Keyboard(parent, R.xml.keyboard_4key);
+
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(parent);
         String skin = pref.getString("keyboard_skin",
                                      mWnn.getResources().getString(R.string.keyboard_skin_id_default));
@@ -536,14 +615,17 @@ public class DefaultSoftKeyboard implements InputViewManager, KeyboardView.OnKey
         mKeyboardView.setOnKeyboardActionListener(this);
         mCurrentKeyboard = null;
 
-        mMainView = (ViewGroup) parent.getLayoutInflater().inflate(R.layout.keyboard_default_main, null);
+        mMainView = (BaseInputView) parent.getLayoutInflater().inflate(R.layout.keyboard_default_main, null);
         mSubView = (ViewGroup) parent.getLayoutInflater().inflate(R.layout.keyboard_default_sub, null);
-        if (mDisplayMode == LANDSCAPE || !mHardKeyboardHidden) { 
-            mMainView.addView(mSubView);
+
+        if (!mHardKeyboardHidden) {
+            if (!mEnableHardware12Keyboard) {
+                mMainView.addView(mSubView);
+            }
         } else if (mKeyboardView != null) {
             mMainView.addView(mKeyboardView);
         }
-        
+
         return mMainView;
     }
     
@@ -624,9 +706,6 @@ public class DefaultSoftKeyboard implements InputViewManager, KeyboardView.OnKey
     
     /** @see jp.co.omronsoft.openwnn.InputViewManager#getCurrentView */
     public View getCurrentView() {
-        if (mCurrentKeyboard == null) {
-            return null;
-        }
         return mMainView;
     }
 
@@ -682,7 +761,12 @@ public class DefaultSoftKeyboard implements InputViewManager, KeyboardView.OnKey
         }
 
         /* pop-up preview */
-        mKeyboardView.setPreviewEnabled(pref.getBoolean("popup_preview", true));
+        if (OpenWnn.isXLarge()) {
+            mKeyboardView.setPreviewEnabled(false);
+        } else {
+            mKeyboardView.setPreviewEnabled(pref.getBoolean("popup_preview", true));
+            mKeyboardView.clearWindowInfo();
+        }
 
     }
 
@@ -694,39 +778,63 @@ public class DefaultSoftKeyboard implements InputViewManager, KeyboardView.OnKey
         mDisableKeyInput = true;
     }
 
+    /** @see jp.co.omronsoft.openwnn.InputViewManager#showInputView */
+    public void showInputView() {
+        if (mKeyboardView != null) {
+            mKeyboardView.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /** @see jp.co.omronsoft.openwnn.InputViewManager#hideInputView */
+    public void hideInputView() {
+        mKeyboardView.setVisibility(View.GONE);
+    }
+
     /***********************************************************************
      * onKeyboardActionListener
      ***********************************************************************/
-    /** @see android.inputmethodservice.KeyboardView.OnKeyboardActionListener#onKey */
+    /** @see jp.co.omronsoft.openwnn.KeyboardView.OnKeyboardActionListener#onKey */
     public void onKey(int primaryCode, int[] keyCodes) { }
 
-    /** @see android.inputmethodservice.KeyboardView.OnKeyboardActionListener#swipeRight */
+    /** @see jp.co.omronsoft.openwnn.KeyboardView.OnKeyboardActionListener#swipeRight */
     public void swipeRight() { }
 
-    /** @see android.inputmethodservice.KeyboardView.OnKeyboardActionListener#swipeLeft */
+    /** @see jp.co.omronsoft.openwnn.KeyboardView.OnKeyboardActionListener#swipeLeft */
     public void swipeLeft() { }
 
-    /** @see android.inputmethodservice.KeyboardView.OnKeyboardActionListener#swipeDown */
+    /** @see jp.co.omronsoft.openwnn.KeyboardView.OnKeyboardActionListener#swipeDown */
     public void swipeDown() { }
 
-    /** @see android.inputmethodservice.KeyboardView.OnKeyboardActionListener#swipeUp */
+    /** @see jp.co.omronsoft.openwnn.KeyboardView.OnKeyboardActionListener#swipeUp */
     public void swipeUp() { }
 
-    /** @see android.inputmethodservice.KeyboardView.OnKeyboardActionListener#onRelease */
+    /** @see jp.co.omronsoft.openwnn.KeyboardView.OnKeyboardActionListener#onRelease */
     public void onRelease(int x) { }
 
-    /** @see android.inputmethodservice.KeyboardView.OnKeyboardActionListener#onPress */
+    /** @see jp.co.omronsoft.openwnn.KeyboardView.OnKeyboardActionListener#onPress */
     public void onPress(int x) {
+        playSoundAndVibration();
+    }
+
+    /** @see android.jp.co.omronsoft.openwnn.KeyboardView.OnKeyboardActionListener#onLongPress */
+    public boolean onLongPress(Keyboard.Key key) {
+        return false;
+    }
+
+    /**
+     * Play sound & vibration.
+     */
+    private void playSoundAndVibration() {
         /* key click sound & vibration */
         if (mVibrator != null) {
-            try { mVibrator.vibrate(30); } catch (Exception ex) { }
+            try { mVibrator.vibrate(5); } catch (Exception ex) { }
         }
         if (mSound != null) {
             try { mSound.seekTo(0); mSound.start(); } catch (Exception ex) { }
         }
     }
-    
-    /** @see android.inputmethodservice.KeyboardView.OnKeyboardActionListener#onText */
+
+    /** @see jp.co.omronsoft.openwnn.KeyboardView.OnKeyboardActionListener#onText */
     public void onText(CharSequence text) {}
 
     /**
@@ -757,6 +865,15 @@ public class DefaultSoftKeyboard implements InputViewManager, KeyboardView.OnKey
     }
 
     /**
+     * Set the H/W keyboard's type.
+     *
+     * @param type12Key {@code true} if 12Key.
+     */
+    public void setHardware12Keyboard(boolean type12Key) {
+        mEnableHardware12Keyboard = type12Key;
+    }
+
+    /**
      * Get current keyboard view.
      */
     public View getKeyboardView() {
@@ -771,5 +888,26 @@ public class DefaultSoftKeyboard implements InputViewManager, KeyboardView.OnKey
         Keyboard keyboard = mCurrentKeyboard;
         mCurrentKeyboard = null;
         changeKeyboard(keyboard);
+    }
+
+    /**
+     * Set the normal keyboard.
+     */
+    public void setNormalKeyboard() {
+        if (mCurrentKeyboard == null) {
+            return;
+        }
+        mKeyboardView.setKeyboard(mCurrentKeyboard);
+        mKeyboardView.setOnKeyboardActionListener(this);
+        mIsSymbolKeyboard = false;
+    }
+
+    /**
+     * Set the symbol keyboard.
+     */
+    public void setSymbolKeyboard() {
+        mKeyboardView.setKeyboard(mSymbolKeyboard);
+        mKeyboardView.setOnKeyboardActionListener(mSymbolOnKeyboardAction);
+        mIsSymbolKeyboard = true;
     }
 }

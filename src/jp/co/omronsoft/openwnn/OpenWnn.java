@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009  OMRON SOFTWARE Co., Ltd.
+ * Copyright (C) 2008-2012  OMRON SOFTWARE Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package jp.co.omronsoft.openwnn;
 
+import jp.co.omronsoft.openwnn.JAJP.*;
 import android.inputmethodservice.InputMethodService;
 import android.view.WindowManager;
 import android.content.Context;
@@ -32,10 +33,15 @@ import android.content.res.Configuration;
 import android.graphics.*;
 import android.graphics.drawable.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import jp.co.omronsoft.openwnn.KeyAction;
+
 /**
  * The OpenWnn IME's base class.
  *
- * @author Copyright (C) 2009 OMRON SOFTWARE CO., LTD.  All Rights Reserved.
+ * @author Copyright (C) 2009-2011 OMRON SOFTWARE CO., LTD.  All Rights Reserved.
  */
 public class OpenWnn extends InputMethodService {
 
@@ -59,6 +65,21 @@ public class OpenWnn extends InputMethodService {
     /** Flag for checking if the previous down key event is consumed by OpenWnn  */
     private boolean mConsumeDownEvent;
 
+    /** for isXLarge */
+    private static boolean mIsXLarge = false;
+
+    /** TextCandidatesViewManager */
+    protected TextCandidatesViewManager mTextCandidatesViewManager = null;
+
+    /** TextCandidates1LineViewManager */
+    protected TextCandidates1LineViewManager mTextCandidates1LineViewManager = null;
+
+    /** The instance of current IME */
+    private static OpenWnn mCurrentIme;
+
+    /** KeyAction list */
+    private List<KeyAction> KeyActionList = new ArrayList<KeyAction>();
+
     /**
      * Constructor
      */
@@ -71,10 +92,22 @@ public class OpenWnn extends InputMethodService {
      **********************************************************************/
     /** @see android.inputmethodservice.InputMethodService#onCreate */
     @Override public void onCreate() {
+        updateXLargeMode();
         super.onCreate();
 
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
 
+        mCurrentIme = this;
+
+
+        mTextCandidatesViewManager = new TextCandidatesViewManager(-1);
+        if (isXLarge()) {
+            mTextCandidates1LineViewManager =
+                new TextCandidates1LineViewManager(OpenWnnEngineJAJP.LIMIT_OF_CANDIDATES_1LINE);
+            mCandidatesViewManager = mTextCandidates1LineViewManager;
+        } else {
+            mCandidatesViewManager = mTextCandidatesViewManager;
+        }
 
         if (mConverter != null) { mConverter.init(); }
         if (mComposingText != null) { mComposingText.clear(); }
@@ -84,6 +117,14 @@ public class OpenWnn extends InputMethodService {
     @Override public View onCreateCandidatesView() {
         if (mCandidatesViewManager != null) {
             WindowManager wm = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
+            if (isXLarge()) {
+                mCandidatesViewManager = mTextCandidates1LineViewManager;
+                mTextCandidatesViewManager.initView(this,
+                                                        wm.getDefaultDisplay().getWidth(),
+                                                        wm.getDefaultDisplay().getHeight());
+            } else {
+                mCandidatesViewManager = mTextCandidatesViewManager;
+            }
             View view = mCandidatesViewManager.initView(this,
                                                         wm.getDefaultDisplay().getWidth(),
                                                         wm.getDefaultDisplay().getHeight());
@@ -112,13 +153,28 @@ public class OpenWnn extends InputMethodService {
     /** @see android.inputmethodservice.InputMethodService#onDestroy */
     @Override public void onDestroy() {
         super.onDestroy();
-
+        mCurrentIme = null;
         close();
     }
 
     /** @see android.inputmethodservice.InputMethodService#onKeyDown */
     @Override public boolean onKeyDown(int keyCode, KeyEvent event) {
         mConsumeDownEvent = onEvent(new OpenWnnEvent(event));
+
+        KeyAction Keycodeinfo = new KeyAction();
+        Keycodeinfo.mConsumeDownEvent = mConsumeDownEvent;
+        Keycodeinfo.mKeyCode = keyCode;
+
+        int cnt = KeyActionList.size();
+        if (cnt != 0) {
+            for (int i = 0; i < cnt; i++) {
+                if (KeyActionList.get(i).mKeyCode == keyCode) {
+                    KeyActionList.remove(i);
+                    break;
+                }
+            }
+        }
+        KeyActionList.add(Keycodeinfo);
         if (!mConsumeDownEvent) {
             return super.onKeyDown(keyCode, event);
         }
@@ -128,12 +184,37 @@ public class OpenWnn extends InputMethodService {
     /** @see android.inputmethodservice.InputMethodService#onKeyUp */
     @Override public boolean onKeyUp(int keyCode, KeyEvent event) {
         boolean ret = mConsumeDownEvent;
+        int cnt = KeyActionList.size();
+        for (int i = 0; i < cnt; i++) {
+            KeyAction Keycodeinfo = KeyActionList.get(i);
+            if (Keycodeinfo.mKeyCode == keyCode) {
+                ret = Keycodeinfo.mConsumeDownEvent;
+                KeyActionList.remove(i);
+                break;
+            }
+        }
         if (!ret) {
             ret = super.onKeyUp(keyCode, event);
         }else{
-            onEvent(new OpenWnnEvent(event));
+            ret = onEvent(new OpenWnnEvent(event));
         }
         return ret;
+    }
+
+    /**
+     * Called when the key long press event occurred.
+     *
+     * @see android.inputmethodservice.InputMethodService#onKeyLongPress
+     */
+    @Override public boolean onKeyLongPress(int keyCode, KeyEvent event) {
+        if (mCurrentIme == null) {
+            Log.e("iWnn", "OpenWnn::onKeyLongPress()  Unprocessing onCreate() ");
+            return super.onKeyLongPress(keyCode, event);
+        }
+
+        OpenWnnEvent wnnEvent = new OpenWnnEvent(event);
+        wnnEvent.code = OpenWnnEvent.KEYLONGPRESS;
+        return onEvent(wnnEvent);
     }
         
     /** @see android.inputmethodservice.InputMethodService#onStartInput */
@@ -246,5 +327,100 @@ public class OpenWnn extends InputMethodService {
      */
     protected void close() {
         if (mConverter != null) { mConverter.close(); }
+    }
+
+    /**
+     * Whether the x large mode.
+     *
+     * @return      {@code true} if x large; {@code false} if not x large.
+     */
+    public static boolean isXLarge() {
+        return mIsXLarge;
+    }
+
+    /**
+     * Update the x large mode.
+     */
+    public void updateXLargeMode() {
+        mIsXLarge = ((getResources().getConfiguration().screenLayout &
+                      Configuration.SCREENLAYOUT_SIZE_MASK)
+                      == Configuration.SCREENLAYOUT_SIZE_XLARGE);
+    }
+
+    /**
+     * Get the instance of current IME.
+     *
+     * @return the instance of current IME, See {@link jp.co.omronsoft.openwnn.OpenWnn}
+     */
+    public static OpenWnn getCurrentIme() {
+        return mCurrentIme;
+    }
+
+    /**
+     * Check through key code in IME.
+     *
+     * @param keyCode  check key code.
+     * @return {@code true} if through key code; {@code false} otherwise.
+     */
+    protected boolean isThroughKeyCode(int keyCode) {
+        boolean result;
+        switch (keyCode) {
+        case KeyEvent.KEYCODE_CALL:
+        case KeyEvent.KEYCODE_VOLUME_DOWN:
+        case KeyEvent.KEYCODE_VOLUME_UP:
+        case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+        case KeyEvent.KEYCODE_MEDIA_NEXT:
+        case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+        case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+        case KeyEvent.KEYCODE_MEDIA_REWIND:
+        case KeyEvent.KEYCODE_MEDIA_STOP:
+        case KeyEvent.KEYCODE_MUTE:
+        case KeyEvent.KEYCODE_HEADSETHOOK:
+        case KeyEvent.KEYCODE_VOLUME_MUTE:
+        case KeyEvent.KEYCODE_MEDIA_CLOSE:
+        case KeyEvent.KEYCODE_MEDIA_EJECT:
+        case KeyEvent.KEYCODE_MEDIA_PAUSE:
+        case KeyEvent.KEYCODE_MEDIA_PLAY:
+        case KeyEvent.KEYCODE_MEDIA_RECORD:
+        case KeyEvent.KEYCODE_MANNER_MODE:
+            result = true;
+            break;
+
+        default:
+            result = false;
+            break;
+
+        }
+        return result;
+    }
+
+    /**
+     * Check ten-key code.
+     *
+     * @param keyCode  check key code.
+     * @return {@code true} if ten-key code; {@code false} not ten-key code.
+     */
+    protected boolean isTenKeyCode(int keyCode) {
+        boolean result = false;
+        switch (keyCode) {
+        case KeyEvent.KEYCODE_NUMPAD_0:
+        case KeyEvent.KEYCODE_NUMPAD_1:
+        case KeyEvent.KEYCODE_NUMPAD_2:
+        case KeyEvent.KEYCODE_NUMPAD_3:
+        case KeyEvent.KEYCODE_NUMPAD_4:
+        case KeyEvent.KEYCODE_NUMPAD_5:
+        case KeyEvent.KEYCODE_NUMPAD_6:
+        case KeyEvent.KEYCODE_NUMPAD_7:
+        case KeyEvent.KEYCODE_NUMPAD_8:
+        case KeyEvent.KEYCODE_NUMPAD_9:
+        case KeyEvent.KEYCODE_NUMPAD_DOT:
+            result = true;
+            break;
+
+        default:
+            break;
+
+        }
+        return result;
     }
 }

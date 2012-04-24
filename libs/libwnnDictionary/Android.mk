@@ -30,6 +30,4 @@ LOCAL_C_INCLUDES += \
 LOCAL_CFLAGS += \
 	 -O
 
-
-
 include $(BUILD_SHARED_LIBRARY)

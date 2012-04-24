@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009  OMRON SOFTWARE Co., Ltd.
+ * Copyright (C) 2008-2012  OMRON SOFTWARE Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.util.*;
 /**
  * The definition class of event message used by OpenWnn framework.
  *
- * @author Copyright (C) 2009 OMRON SOFTWARE CO., LTD.  All Rights Reserved.
+ * @author Copyright (C) 2009-2011 OMRON SOFTWARE CO., LTD.  All Rights Reserved.
  */
 public class OpenWnnEvent {
     /** Offset value for private events */
@@ -127,6 +127,11 @@ public class OpenWnnEvent {
     public static final int CHANGE_MODE  = 0xF000000F;
 
     /**
+     * Key long press event.
+     */
+    public static final int KEYLONGPRESS = 0xF0000024;
+
+    /**
      * The definition class of engine's mode.
      */
     public static final class Mode {
@@ -223,6 +228,36 @@ public class OpenWnnEvent {
      * Touch the other key.
      */
     public static final int TOUCH_OTHER_KEY = 0xF0000020;
+
+    /**
+     * Start focus candidate.
+     */
+    public static final int FOCUS_CANDIDATE_START = 0xF0002000;
+
+    /**
+     * End focus candidate.
+     */
+    public static final int FOCUS_CANDIDATE_END = 0xF0002001;
+
+    /**
+     * Scroll up for symbol keyboard.
+     */
+    public static final int CANDIDATE_VIEW_SCROLL_UP = 0xF0001000;
+
+    /**
+     * Scroll down for symbol keyboard.
+     */
+    public static final int CANDIDATE_VIEW_SCROLL_DOWN = 0xF0001001;
+
+    /**
+     * Scroll full up for symbol keyboard.
+     */
+    public static final int CANDIDATE_VIEW_SCROLL_FULL_UP = 0xF0001002;
+
+    /**
+     * Scroll full down for symbol keyboard.
+     */
+    public static final int CANDIDATE_VIEW_SCROLL_FULL_DOWN = 0xF0001003;
 
     /** Event code */
     public int code = UNDEFINED;

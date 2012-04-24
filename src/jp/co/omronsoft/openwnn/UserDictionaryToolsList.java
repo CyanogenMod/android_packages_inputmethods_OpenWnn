@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009  OMRON SOFTWARE Co., Ltd.
+ * Copyright (C) 2008-2012  OMRON SOFTWARE Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,15 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Color;
+import android.graphics.Paint.FontMetricsInt;
 import android.os.Bundle;
+import android.text.TextPaint;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -144,6 +148,9 @@ public abstract class UserDictionaryToolsList extends Activity
     /** Page right button */
     private Button mRightButton = null;
 
+    /** for isXLarge */
+    private static boolean mIsXLarge = false;
+
     /**
      * Send the specified event to IME
      *
@@ -154,10 +161,8 @@ public abstract class UserDictionaryToolsList extends Activity
     /** Get the comparator for sorting the list */
     protected abstract Comparator<WnnWord> getComparator();
 
-    /**
-     * Create the header
-     */
-    protected abstract void  headerCreate();
+    /** Show Dialog Num */
+    private int mDialogShow = -1;
 
     /** @see android.app.Activity#onCreate */
     @Override protected void onCreate(Bundle savedInstanceState) {
@@ -166,7 +171,6 @@ public abstract class UserDictionaryToolsList extends Activity
         super.onCreate(savedInstanceState);
 
         /* create XML layout */
-        requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
         setContentView(R.layout.user_dictionary_tools_list);
         mTableLayout = (TableLayout)findViewById(R.id.user_dictionary_tools_table);
 
@@ -201,15 +205,36 @@ public abstract class UserDictionaryToolsList extends Activity
     /** @see android.app.Activity#onStart */
     @Override protected void onStart() {
         super.onStart();
+        mDialogShow = -1;
         sBeforeSelectedViewID = -1;
         sJustBeforeActionTime = -1;
         mWordList = getWords();
 
-        headerCreate();
         final TextView leftText = (TextView) findViewById(R.id.user_dictionary_tools_list_title_words_count);
         leftText.setText(mWordList.size() + "/" + MAX_WORD_COUNT);
 
+        mIsXLarge = ((getResources().getConfiguration().screenLayout &
+                      Configuration.SCREENLAYOUT_SIZE_MASK)
+                      == Configuration.SCREENLAYOUT_SIZE_XLARGE);
         updateWordList();
+    }
+
+    /**
+     * Called when the system is about to start resuming a previous activity.
+     *
+     * @see android.app.Activity#onPause
+     */
+    @Override protected void onPause() {
+
+        if (mDialogShow == DIALOG_CONTROL_DELETE_CONFIRM) {
+            dismissDialog(DIALOG_CONTROL_DELETE_CONFIRM);
+            mDialogShow = -1;
+        } else if (mDialogShow == DIALOG_CONTROL_INIT_CONFIRM){
+            dismissDialog(DIALOG_CONTROL_INIT_CONFIRM);
+            mDialogShow = -1;
+        }
+
+        super.onPause();
     }
 
     /**
@@ -308,12 +333,14 @@ public abstract class UserDictionaryToolsList extends Activity
         case MENU_ITEM_DELETE:
             /* delete the word (show dialog) */
             showDialog(DIALOG_CONTROL_DELETE_CONFIRM);
+            mDialogShow = DIALOG_CONTROL_DELETE_CONFIRM;
             ret = true;
             break;
 
         case MENU_ITEM_INIT:
             /* clear the dictionary (show dialog) */
             showDialog(DIALOG_CONTROL_INIT_CONFIRM);
+            mDialogShow = DIALOG_CONTROL_INIT_CONFIRM;
             ret = true;
             break;
 
@@ -372,6 +399,7 @@ public abstract class UserDictionaryToolsList extends Activity
         new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int button) {
 
+                mDialogShow = -1;
                 CharSequence focusString = ((TextView)sFocusingView).getText();
                 CharSequence focusPairString = ((TextView)sFocusingPairView).getText();
                 WnnWord wnnWordSearch = new WnnWord();
@@ -422,6 +450,7 @@ public abstract class UserDictionaryToolsList extends Activity
         new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int button) {
 
+                mDialogShow = -1;
                 /* clear the user dictionary */
                 OpenWnnEvent ev = new OpenWnnEvent(OpenWnnEvent.INITIALIZE_USER_DICTIONARY, new WnnWord());
 
@@ -638,6 +667,12 @@ public abstract class UserDictionaryToolsList extends Activity
             Display display = windowManager.getDefaultDisplay();
             int system_width = display.getWidth();
 
+            UserDictionaryToolsListFocus dummy = new UserDictionaryToolsListFocus(this);
+            dummy.setTextSize(WORD_TEXT_SIZE);
+            TextPaint paint = dummy.getPaint();
+            FontMetricsInt fontMetrics = paint.getFontMetricsInt();
+            int row_hight = (Math.abs(fontMetrics.top) + fontMetrics.bottom) * 2;
+ 
             for (int i = 1; i <= MAX_LIST_WORD_COUNT; i++) {
                 TableRow row = new TableRow(this);
                 UserDictionaryToolsListFocus stroke = new UserDictionaryToolsListFocus(this);
@@ -654,6 +689,10 @@ public abstract class UserDictionaryToolsList extends Activity
                 stroke.setFocusableInTouchMode(true);
                 stroke.setOnTouchListener(this);
                 stroke.setOnFocusChangeListener(this);
+                if (isXLarge()) {
+                    stroke.setHeight(row_hight);
+                    stroke.setGravity(Gravity.CENTER_VERTICAL);
+                }
 
                 UserDictionaryToolsListFocus candidate = new UserDictionaryToolsListFocus(this);
                 candidate.setId(i+MAX_WORD_COUNT);
@@ -670,6 +709,10 @@ public abstract class UserDictionaryToolsList extends Activity
                 candidate.setOnTouchListener(this);
                 candidate.setOnFocusChangeListener(this);
 
+                if (isXLarge()) {
+                    candidate.setHeight(row_hight);
+                    candidate.setGravity(Gravity.CENTER_VERTICAL);
+                }
                 stroke.setPairView(candidate);
                 candidate.setPairView(stroke);
 
@@ -726,4 +769,14 @@ public abstract class UserDictionaryToolsList extends Activity
         }
         mTableLayout.requestLayout();
     }
+
+    /**
+     * Whether the x large mode.
+     *
+     * @return      {@code true} if x large; {@code false} if not x large.
+     */
+    public static boolean isXLarge() {
+        return mIsXLarge;
+    }
+
 }

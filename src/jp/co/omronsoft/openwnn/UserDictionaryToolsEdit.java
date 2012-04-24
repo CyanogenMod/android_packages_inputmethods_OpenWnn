@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009  OMRON SOFTWARE Co., Ltd.
+ * Copyright (C) 2008-2012  OMRON SOFTWARE Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -113,7 +113,6 @@ public abstract class UserDictionaryToolsEdit extends Activity implements View.O
         super.onCreate(savedInstanceState);
 
         /* create view from XML layout */
-        requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
         setContentView(R.layout.user_dictionary_tools_edit);
 
         /* get widgets */

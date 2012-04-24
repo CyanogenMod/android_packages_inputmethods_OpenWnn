@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009  OMRON SOFTWARE Co., Ltd.
+ * Copyright (C) 2008-2012  OMRON SOFTWARE Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -167,7 +167,13 @@ public class OpenWnnEN extends OpenWnn {
         mComposingText = new ComposingText();
         mCandidatesViewManager = new TextCandidatesViewManager(-1);
         mInputViewManager = new DefaultSoftKeyboardEN();
-        mConverterEN = new OpenWnnEngineEN("/data/data/jp.co.omronsoft.openwnn/writableEN.dic");
+
+        if (OpenWnn.getCurrentIme() != null) {
+            if (mConverterEN == null) {
+                mConverterEN = new OpenWnnEngineEN("/data/data/jp.co.omronsoft.openwnn/writableEN.dic");
+            }
+        }
+
         mConverter = mConverterEN;
         mSymbolList = null;
 
@@ -281,6 +287,10 @@ public class OpenWnnEN extends OpenWnn {
         super.onCreate();
         mWordSeparators = getResources().getString(R.string.en_word_separators);
 
+        if (mConverterEN == null) {
+            mConverterEN = new OpenWnnEngineEN("/data/data/jp.co.omronsoft.openwnn/writableEN.dic");
+        }
+
         if (mSymbolList == null) {
             mSymbolList = new SymbolList(this, SymbolList.LANG_EN);
         }
@@ -327,10 +337,15 @@ public class OpenWnnEN extends OpenWnn {
         fitInputType(pref, attribute);
 
         ((DefaultSoftKeyboard) mInputViewManager).resetCurrentKeyboard();
+
+        if (OpenWnn.isXLarge()) {
+            mTextCandidatesViewManager.setPreferences(pref);
+        }
     }
 
     /** @see jp.co.omronsoft.openwnn.OpenWnn#hideWindow */
     @Override public void hideWindow() {
+        ((BaseInputView)((DefaultSoftKeyboard) mInputViewManager).getCurrentView()).closeDialog();
         mComposingText.clear();
         mInputViewManager.onUpdateState(this);
         mHandler.removeMessages(MSG_START_TUTORIAL);
@@ -521,7 +536,7 @@ public class OpenWnnEN extends OpenWnn {
             ret = processKeyEvent(ev.keyEvent);
             if (!ret) {
             	int code = keyEvent.getKeyCode();
-            	if (code == KeyEvent.KEYCODE_ENTER) {
+            	if (code == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER) {
                     sendKeyChar('\n');
             	} else {
                     mInputConnection.sendKeyEvent(keyEvent);
@@ -705,6 +720,7 @@ public class OpenWnnEN extends OpenWnn {
                 return true;
 
             case KeyEvent.KEYCODE_ENTER:
+            case KeyEvent.KEYCODE_NUMPAD_ENTER:
             case KeyEvent.KEYCODE_DPAD_CENTER:
                 commitText(1);
                 mComposingText.clear();
@@ -715,7 +731,7 @@ public class OpenWnnEN extends OpenWnn {
                 return true;
 
             default:
-                break;
+                return !isThroughKeyCode(key);
             }
         } else {
             /* if there is no composing string. */
@@ -732,6 +748,7 @@ public class OpenWnnEN extends OpenWnn {
                 switch (key) {
                 case KeyEvent.KEYCODE_DPAD_CENTER:
                 case KeyEvent.KEYCODE_ENTER:
+                case KeyEvent.KEYCODE_NUMPAD_ENTER:
                     if (mEnableAutoHideKeyboard) {
                         mInputViewManager.closing();
                         requestHideSelf(0);
@@ -823,9 +840,9 @@ public class OpenWnnEN extends OpenWnn {
                     mDisplayText.setSpan(SPAN_REMAIN_BGCOLOR_HL, cursor, disp.length(),
                             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                     mDisplayText.setSpan(SPAN_TEXTCOLOR, 0, disp.length(),
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE); 
                 }
-
+ 
                 disp.setSpan(SPAN_UNDERLINE, 0, disp.length(),
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             }

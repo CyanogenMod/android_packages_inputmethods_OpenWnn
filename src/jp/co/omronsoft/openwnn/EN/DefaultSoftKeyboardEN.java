@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008,2009  OMRON SOFTWARE Co., Ltd.
+ * Copyright (C) 2008-2012  OMRON SOFTWARE Co., Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,12 @@ package jp.co.omronsoft.openwnn.EN;
 
 import jp.co.omronsoft.openwnn.*;
 import android.content.SharedPreferences;
-import android.inputmethodservice.Keyboard;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+
+import jp.co.omronsoft.openwnn.Keyboard;
 
 import android.util.Log;
 
