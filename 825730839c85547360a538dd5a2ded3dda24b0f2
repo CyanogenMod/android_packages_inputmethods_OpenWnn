@@ -1,0 +1,8 @@
+Change-Id: I825730839c85547360a538dd5a2ded3dda24b0f2
+Code-Review+2: Steve Kondik <shade@chemlab.org>
+Verified+1: Steve Kondik <shade@chemlab.org>
+Submitted-by: Steve Kondik <shade@chemlab.org>
+Submitted-at: Sun, 10 Jun 2012 14:27:33 +0400
+Reviewed-on: http://review.cyanogenmod.com/17442
+Project: CyanogenMod/android_packages_inputmethods_OpenWnn
+Branch: refs/heads/ics
