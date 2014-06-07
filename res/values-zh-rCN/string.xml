@@ -125,5 +125,9 @@
 
     <string name="ti_long_press_dialog_input_mode_txt">输入模式</string>
 
+    <string name="preference_keyboard_android_default">标准</string>
+    <string name="preference_keyboard_simple">简单</string>
+    <string name="preference_keyboard_metal">金属</string>
+
 </resources>
 
