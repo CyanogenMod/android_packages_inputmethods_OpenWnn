@@ -24,49 +24,49 @@
         android:layout_height="wrap_content"
         android:text="@string/openwnn_engine_label"
     />
-    
-	<RadioGroup android:id="@+id/radio_group"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:orientation="vertical">
 
-	    <RadioButton android:id="@+id/radio_en"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/debug_openwnn_engine_en"
-	        android:textSize="11sp"
-	    />
-	</RadioGroup>
+    <RadioGroup android:id="@+id/radio_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-	<LinearLayout android:orientation="horizontal"
-					android:layout_width="fill_parent"
-					android:layout_height="wrap_content">
+        <RadioButton android:id="@+id/radio_en"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/debug_openwnn_engine_en"
+            android:textSize="11sp"
+        />
+    </RadioGroup>
 
-		<Button android:id="@+id/execButton2"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:layout_marginRight="3dip"
-	        android:text="@string/execButton2"
-	        android:textSize="11sp"
-		/>
+    <LinearLayout android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
 
-		<TextView android:id="@+id/editText2"
-	   		android:layout_width="fill_parent"
-	   		android:layout_height="wrap_content"
-	   		android:textSize="11sp"
-		/>
-	</LinearLayout>
+        <Button android:id="@+id/execButton2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="3dip"
+            android:text="@string/execButton2"
+            android:textSize="11sp"
+        />
 
-	<ScrollView
-	    android:layout_width="fill_parent"
-    	android:layout_height="fill_parent"
-    	android:background="#000000">
+        <TextView android:id="@+id/editText2"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+        />
+    </LinearLayout>
 
-		<LinearLayout android:id="@+id/engine_scroll"
-        	          android:orientation="vertical"
-            	      android:layout_width="fill_parent"
-                	  android:layout_height="fill_parent">
- 
-		</LinearLayout>
-	</ScrollView>
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="#000000">
+
+        <LinearLayout android:id="@+id/engine_scroll"
+            android:orientation="vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

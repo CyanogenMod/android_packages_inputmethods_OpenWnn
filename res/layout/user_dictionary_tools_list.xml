@@ -23,8 +23,8 @@
         android:id="@+id/user_dictionary_tools_list_title_words_count"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="right"
-        android:gravity="right"
+        android:layout_gravity="end"
+        android:gravity="end"
         android:textColor="?android:attr/textColorPrimary"/>
     <LinearLayout
        android:orientation="horizontal"
@@ -52,14 +52,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="1dip"
-        android:layout_gravity="left">
+        android:layout_gravity="start">
     <TextView
             android:layout_width="0dip"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginTop="1dip"
-            android:layout_marginRight="1dip"
-            android:layout_marginLeft="0dip"
+            android:layout_marginEnd="1dip"
+            android:layout_marginStart="0dip"
             android:layout_marginBottom="1dip"
             android:text="@string/user_dictionary_title_read"
             android:textSize="16dip"
@@ -71,8 +71,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginTop="1dip"
-            android:layout_marginRight="0dip"
-            android:layout_marginLeft="1dip"
+            android:layout_marginEnd="0dip"
+            android:layout_marginStart="1dip"
             android:layout_marginBottom="1dip"
             android:text="@string/user_dictionary_title_candidate"
             android:textSize="16dip"

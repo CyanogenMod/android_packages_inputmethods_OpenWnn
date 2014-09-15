@@ -33,7 +33,7 @@
   <Button android:id="@+id/execButton"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_marginRight="3dip"
+    android:layout_marginEnd="3dip"
     android:text="@string/execButton"/>
 
     <ScrollView

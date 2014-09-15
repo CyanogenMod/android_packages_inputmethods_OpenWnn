@@ -15,16 +15,17 @@
 -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	  package="jp.co.omronsoft.openwnn">
+        package="jp.co.omronsoft.openwnn">
 
     <original-package android:name="jp.co.omronsoft.openwnn" />
 
     <uses-permission xmlns:android="http://schemas.android.com/apk/res/android" android:name="android.permission.VIBRATE"/>
-    <application android:label="OpenWnn">
+    <application android:label="OpenWnn"
+                 android:supportsRtl="true">
 
         <service android:name="OpenWnnJAJP" android:label="Japanese IME"
-		 android:permission="android.permission.BIND_INPUT_METHOD"
-		 android:id="@+id/openwnn_japanese">
+                android:permission="android.permission.BIND_INPUT_METHOD"
+                android:id="@+id/openwnn_japanese">
             <intent-filter>
                 <action android:name="android.view.InputMethod" />
             </intent-filter>
