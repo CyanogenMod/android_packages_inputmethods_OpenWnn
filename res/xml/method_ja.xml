@@ -19,6 +19,7 @@
 
 <input-method xmlns:android="http://schemas.android.com/apk/res/android"
               android:settingsActivity="jp.co.omronsoft.openwnn.OpenWnnControlPanelJAJP"
+              android:isDefault="@bool/im_is_default"
               >
    <subtype android:label="@string/label_subtype_generic"
            android:imeSubtypeLocale="ja"
