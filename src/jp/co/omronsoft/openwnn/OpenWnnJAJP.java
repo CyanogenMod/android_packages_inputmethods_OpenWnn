@@ -705,8 +705,12 @@ public class OpenWnnJAJP extends OpenWnn {
             return onKeyLongPressEvent(ev.keyEvent);
 
         case OpenWnnEvent.INITIALIZE_LEARNING_DICTIONARY:
-            mConverterEN.initializeDictionary(WnnEngine.DICTIONARY_TYPE_LEARN);
-            mConverterJAJP.initializeDictionary(WnnEngine.DICTIONARY_TYPE_LEARN);
+            if (mConverterEN != null) {
+                mConverterEN.initializeDictionary(WnnEngine.DICTIONARY_TYPE_LEARN);
+            }
+            if (mConverterJAJP != null) {
+                mConverterJAJP.initializeDictionary(WnnEngine.DICTIONARY_TYPE_LEARN);
+            }
             return true;
 
         case OpenWnnEvent.INITIALIZE_USER_DICTIONARY:
