@@ -736,8 +736,12 @@ public class OpenWnnJAJP extends OpenWnn {
             break;
 
         case OpenWnnEvent.ADD_WORD:
-            mConverterJAJP.addWord(ev.word);
-            return true;
+            ev.errorCode = mConverterJAJP.addWord(ev.word);
+            if (ev.errorCode == 0) {
+                return true;
+            } else {
+                return false;
+            }
 
         case OpenWnnEvent.DELETE_WORD:
             mConverterJAJP.deleteWord(ev.word);

@@ -113,6 +113,7 @@
     <string name="user_dictionary_title_read">Reading</string>
     <string name="user_dictionary_title_candidate">Word</string>
     <string name="user_dictionary_add">Add</string>
+    <string name="user_dictionary_add_fail">Failed to add entry</string>
     <string name="user_dictionary_edit">Edit</string>
     <string name="user_dictionary_delete">Delete</string>
     <string name="user_dictionary_delete_confirm">Delete the selected word?</string>
@@ -120,6 +121,7 @@
     <string name="user_dictionary_delete_fail">Fail to delete it</string>
     <string name="user_dictionary_words_duplication_message">Already registered.</string>
     <string name="user_dictionary_over_max_text_size_message">Length of the string exceeds the limit.</string>
+    <string name="user_dictionary_wrong_IME">You must be using OpenWnn input method in order to do that action.</string>
     <string name="user_dictionary_creating_wordlist">Loading</string>
     <string name="user_dictionary_init">Initialize?</string>
     <string name="user_dictionary_prev_button">　≪　</string>

@@ -316,11 +316,12 @@ public class OpenWnnEngineEN implements WnnEngine {
 
     /** @see jp.co.omronsoft.openwnn.WnnEngine#addWord */
     public int addWord(WnnWord word) {
+        int result;
         WnnDictionary dict = mDictionary;
         dict.setInUseState( true );
-        dict.addWordToUserDictionary(word);
+        result = dict.addWordToUserDictionary(word);
         dict.setInUseState( false );
-        return 0;
+        return result;
     }
 
     /** @see jp.co.omronsoft.openwnn.WnnEngine#deleteWord */
