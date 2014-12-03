@@ -436,8 +436,8 @@ public class OpenWnnEN extends OpenWnn {
             break;
 
         case OpenWnnEvent.ADD_WORD:
-            mConverterEN.addWord(ev.word);
-            return true;
+            ev.errorCode = mConverterEN.addWord(ev.word);
+            return ev.errorCode == 0;
 
         case OpenWnnEvent.DELETE_WORD:
             mConverterEN.deleteWord(ev.word);

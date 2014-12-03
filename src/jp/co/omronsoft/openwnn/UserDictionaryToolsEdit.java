@@ -55,7 +55,7 @@ public abstract class UserDictionaryToolsEdit extends Activity implements View.O
     private static final int MAX_TEXT_SIZE = 20;
 
     /** The error code (Already registered the same word) */
-    private static final int RETURN_SAME_WORD = -11;
+    private static final int RETURN_SAME_WORD = -2;
 
     /** The focus view and pair view */
     private static View sFocusingView = null;
@@ -76,6 +76,8 @@ public abstract class UserDictionaryToolsEdit extends Activity implements View.O
     private static final int DIALOG_CONTROL_WORDS_DUPLICATE = 0;
     /** The constant for notifying dialog (The length of specified stroke or candidate exceeds the limit) */
     private static final int DIALOG_CONTROL_OVER_MAX_TEXT_SIZE = 1;
+    /** The constant for notifying dialog (wrong IME) */
+    private static final int DIALOG_WRONG_IME = 2;
 
     /** The operation mode of this activity */
     private int mRequestState;
@@ -250,6 +252,12 @@ public abstract class UserDictionaryToolsEdit extends Activity implements View.O
                     String candidate = mCandidateEditText.getText().toString();
                     if (addDictionary(stroke, candidate)) {
                         screenTransition();
+                    } else {
+                        Log.e("OpenWnn", "doSaveAction: STATE_INSERT: could not addDictionary");
+                        mEntryButton.setEnabled(true);
+                        Toast.makeText(getApplicationContext(),
+                            R.string.user_dictionary_add_fail,
+                            Toast.LENGTH_LONG).show();
                     }
                 }
             break;
@@ -323,6 +331,19 @@ public abstract class UserDictionaryToolsEdit extends Activity implements View.O
                         })
                         .setCancelable(true)
                         .create();
+            case DIALOG_WRONG_IME:
+                /* user doesn't have the openwnn IME active */
+                return new AlertDialog.Builder(UserDictionaryToolsEdit.this)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setMessage(R.string.user_dictionary_wrong_IME)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int witchButton) {
+                            mEntryButton.setEnabled(true);
+                            mCancelButton.setEnabled(true);
+                        }
+                    })
+                    .setCancelable(true)
+                    .create();
         }
         return super.onCreateDialog(id);
     }
@@ -352,6 +373,10 @@ public abstract class UserDictionaryToolsEdit extends Activity implements View.O
             int ret_code = event.errorCode;
             if (ret_code == RETURN_SAME_WORD) {
                 showDialog(DIALOG_CONTROL_WORDS_DUPLICATE);
+            } else if (ret_code == 0) {
+               showDialog(DIALOG_WRONG_IME);
+            } else {
+                Log.e("OpenWnn", "addDictionary() : ret_code == " + ret_code);
             }
         } else {
             /* update the dictionary */

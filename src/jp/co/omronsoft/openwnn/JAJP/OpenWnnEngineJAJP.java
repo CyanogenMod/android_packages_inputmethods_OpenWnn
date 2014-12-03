@@ -526,13 +526,14 @@ public class OpenWnnEngineJAJP implements WnnEngine {
 
     /** @see jp.co.omronsoft.openwnn.WnnEngine#addWord */
     public int addWord(WnnWord word) {
+        int result;
         mDictionaryJP.setInUseState( true );
         if (word.partOfSpeech.right == 0) {
             word.partOfSpeech = mDictionaryJP.getPOS(WnnDictionary.POS_TYPE_MEISI);
         }
-        mDictionaryJP.addWordToUserDictionary(word);
+        result = mDictionaryJP.addWordToUserDictionary(word);
         mDictionaryJP.setInUseState( false );
-        return 0;
+        return result;
     }
 
     /** @see jp.co.omronsoft.openwnn.WnnEngine#deleteWord */
